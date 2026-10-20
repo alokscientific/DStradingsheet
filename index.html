@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DS Trade Log</title>
+<style>
+:root{
+  --bg:#0b1220; --panel:rgba(148,163,184,.06); --line:rgba(148,163,184,.22); --text:#e5e7eb; --muted:#94a3b8;
+  --blue:#3b82f6; --blue2:#2563eb; --green:#10b981; --red:#ef4444; --purple:#8b5cf6; --amber:#f59e0b; --slate:#64748b;
+  --card:#111a2e; --shadow:0 4px 15px rgba(0,0,0,.35);
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f4f6fb; --panel:rgba(15,23,42,.04); --line:rgba(15,23,42,.14); --text:#0f172a; --muted:#64748b; --card:#ffffff; --shadow:0 4px 15px rgba(15,23,42,.10); }
+}
+html[data-theme="dark"]{ --bg:#0b1220; --panel:rgba(148,163,184,.06); --line:rgba(148,163,184,.22); --text:#e5e7eb; --muted:#94a3b8; --card:#111a2e; --shadow:0 4px 15px rgba(0,0,0,.35); }
+html[data-theme="light"]{ --bg:#f4f6fb; --panel:rgba(15,23,42,.04); --line:rgba(15,23,42,.14); --text:#0f172a; --muted:#64748b; --card:#ffffff; --shadow:0 4px 15px rgba(15,23,42,.10); }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:14px 16px 60px}
+.main-title{display:inline-block;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);color:#fff;padding:8px 20px;border-radius:8px;font-weight:900;font-size:1.6rem;letter-spacing:1.5px;box-shadow:0 4px 15px rgba(59,130,246,.4);margin-bottom:4px}
+.sub-title{color:var(--muted);font-size:.85rem;font-weight:600;letter-spacing:.5px;margin-left:24px}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin-bottom:10px}
+.updated{font-size:.72rem;color:var(--muted);text-align:right}
+.updated b{color:var(--text)}
+.btn{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:5px 12px;font-weight:700;font-size:.72rem;cursor:pointer}
+.btn:hover{border-color:var(--blue)}
+.disc{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-left:4px solid var(--amber);border-radius:4px;padding:6px 12px;margin-bottom:14px;color:#d97706;font-weight:700;font-size:.8rem;overflow:hidden;white-space:nowrap}
+.disc span{display:inline-block;padding-left:100%;animation:scroll 38s linear infinite}
+@keyframes scroll{to{transform:translateX(-100%)}}
+.err{display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:.85rem}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--muted);padding:7px 14px;font-weight:800;font-size:.72rem;cursor:pointer;letter-spacing:.3px}
+.seg button.on{background:var(--blue2);color:#fff}
+input.search{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 12px;font-size:.8rem;min-width:180px}
+.snap{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.tile{flex:1 1 150px;padding:12px;border-radius:8px;border:1px solid rgba(59,130,246,.25);background:rgba(59,130,246,.06);text-align:center}
+.tile.wide{flex:2 1 280px}
+.tile .l{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.tile .v{font-size:1.25rem;font-weight:900;margin-top:2px}
+.tile .v.big{font-size:1.6rem}
+.tile .s{font-size:.78rem;font-weight:700}
+.g{color:var(--green)} .r{color:var(--red)} .p{color:var(--purple)} .a{color:var(--amber)} .m{color:var(--muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+.tabs button{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:9px 16px;font-weight:800;font-size:.8rem;cursor:pointer}
+.tabs button.on{color:var(--text);border-bottom-color:var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:1250px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1.5px solid var(--blue);border-top:4px solid var(--blue2);border-radius:8px;box-shadow:var(--shadow);padding:.8rem;transition:all .25s}
+.card:hover{border-color:#60a5fa;transform:translateY(-2px)}
+.row{display:flex;justify-content:space-between;align-items:center}
+.sym{font-weight:900;font-size:1.15rem;line-height:1}
+.badge{font-weight:800;font-size:.6rem;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.b-act{color:var(--blue);background:rgba(59,130,246,.12)} .b-wait{color:var(--amber);background:rgba(245,158,11,.12)}
+.b-tgt{color:var(--green);background:rgba(16,185,129,.12)} .b-sl{color:var(--red);background:rgba(239,68,68,.12)}
+.b-tr{color:var(--purple);background:rgba(139,92,246,.12)} .b-na{color:var(--slate);background:rgba(100,116,139,.15)}
+.b-yes{color:var(--green);background:rgba(16,185,129,.12)} .b-no{color:var(--muted);background:rgba(148,163,184,.12)}
+.mid{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:8px 0 5px}
+.mid .k{font-size:.6rem;font-weight:700;color:var(--muted)} .mid .n{font-size:.95rem;font-weight:800}
+details{border:1px solid var(--line);border-radius:6px;background:var(--panel);margin-top:6px}
+summary{cursor:pointer;padding:.45rem .6rem;font-weight:700;font-size:.78rem}
+.det{padding:0 .6rem .6rem}
+.co{font-size:.8rem;font-weight:600;margin-bottom:2px} .dt{font-size:.65rem;color:var(--muted);font-weight:600;margin-bottom:8px}
+.px{font-size:1.3rem;font-weight:800;line-height:1.1;margin-bottom:8px}
+.pxl{font-size:.6rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+.dg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--panel);padding:8px;border-radius:6px;border:1px solid var(--line);margin:8px 0}
+.dg .i{display:flex;flex-direction:column}.dg .lb{font-size:.58rem;color:var(--muted);font-weight:700}.dg .vl{font-weight:700;font-size:.8rem}
+.mx{background:linear-gradient(90deg,rgba(16,185,129,.15),rgba(16,185,129,.02));border-left:3px solid var(--green);border-radius:4px;padding:6px 8px;margin:8px 0;font-size:.75rem;font-weight:700}
+.links{display:flex;gap:6px;margin-top:8px}
+.links a{flex:1;text-align:center;text-decoration:none;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 0;font-size:.7rem;font-weight:800}
+.links a:hover{border-color:var(--blue)}
+.empty{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px}
+.hh{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px}
+.hbig{font-size:1.6rem;font-weight:900}
+table{border-collapse:collapse;width:100%;font-size:.78rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;user-select:none}
+td:first-child,th:first-child{text-align:left}
+.twrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+h3{margin:18px 0 8px;font-size:.95rem}
+.note{font-size:.72rem;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="main-title">DS TRADE LOG</div><br>
+      <span class="sub-title">Dummy sheet &middot; how every scan pick performs (no 10-slot cap)</span>
+    </div>
+    <div class="updated">
+      Sim data up to: <b id="lastSim">--</b><br>
+      Page refreshed: <b id="lastFetch">--</b>
+      <button class="btn" id="refreshBtn">&#8635; Refresh</button>
+      <button class="btn" id="themeBtn" title="Switch theme">Theme: Auto</button>
+    </div>
+  </div>
+
+  <div class="disc"><span>DISCLAIMER: I am not a SEBI registered advisor. This is a paper-trading simulation of scan results (replayed from 1-minute candles) and is strictly for educational purposes only.</span></div>
+  <div class="err" id="err"></div>
+
+  <div class="bar">
+    <div class="seg" id="segFilter">
+      <button data-f="all" class="on">ALL</button>
+      <button data-f="yes">PUSHED TO MAIN</button>
+      <button data-f="no">NOT PUSHED</button>
+    </div>
+    <input class="search" id="search" placeholder="Search symbol...">
+  </div>
+
+  <div class="snap" id="snap"></div>
+
+  <div class="tabs" id="tabs">
+    <button data-t="active" class="on">&#128202; ACTIVE TRADE</button>
+    <button data-t="pending">&#9203; PENDING</button>
+    <button data-t="history">&#128220; TRADE HISTORY</button>
+    <button data-t="analysis">&#128300; ANALYSIS</button>
+  </div>
+  <div id="view"></div>
+</div>
+
+<script>
+/* ======================= SETTINGS ======================= */
+const SHEET_ID   = "1rsrmQMe8hbjGfsAx7039oMPdmqwWC5hHCpEFQSlVH9o";
+const SHEET_NAME = "DS";
+const INVEST     = 100000;      // paper money per trade
+const REFRESH_MS = 60000;       // auto refresh every 60 s
+/* ======================================================== */
+
+// DS column order (0-based) — must match scanner_STAI.py DS_HEADER
+const C = {sym:0,co:1,entry:2,eDate:3,live:4,chg:5,pnl:6,tgtPct:7,tgt:8,slPct:9,sl:10,trSlPct:11,trSl:12,status:13,
+  hitDate:14,exit:15,days:16,trTgtPct:17,trTgt:18,toggle:19,dayH:20,dayL:21,scanDate:22,score:23,pushed:24,maxH:25,
+  eTime:26,xTime:27,lastSim:28,nextEntry:29,nextFrom:30,strat:31};
+
+let ROWS = [], tab = "active", filt = "all", q = "", sortKey = null, sortDir = -1;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = v => (v === null || v === undefined || v === "" || isNaN(Number(v))) ? 0 : Number(v);
+const fmt2 = v => num(v).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
+const inr0 = v => "₹" + Math.abs(Math.round(v)).toLocaleString("en-IN");
+const sgn = v => v > 0 ? "+" : v < 0 ? "-" : "";
+const pct = (v, d=2) => sgn(v) + Math.abs(v).toFixed(d) + "%";
+const cls = v => v > 0 ? "g" : v < 0 ? "r" : "";
+
+function cellVal(c){ return c ? (c.v === undefined ? null : c.v) : null; }
+function parseDate(v, f){
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "string"){
+    let m = v.match(/^Date\((\d+),(\d+),(\d+)/); if (m) return new Date(+m[1], +m[2], +m[3]);
+    m = v.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+    m = v.trim().match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  }
+  return null;
+}
+const dstr = d => d ? (String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear()) : "--";
+
+function toRows(table){
+  const out = [];
+  (table.rows || []).forEach(r => {
+    const c = r.c || [];
+    const g = i => cellVal(c[i]);
+    const symRaw = g(C.sym);
+    if (!symRaw) return;
+    const raw = String(symRaw).trim();
+    const symbol = raw.split(":").pop();
+    const st = String(g(C.status) || "").trim().toUpperCase();
+    out.push({
+      raw, symbol, company: (g(C.co) && String(g(C.co)).trim()) || symbol,
+      entry: num(g(C.entry)), eDate: parseDate(g(C.eDate)), live: num(g(C.live)), chg: num(g(C.chg)),
+      tgtPct: num(g(C.tgtPct)), tgt: num(g(C.tgt)), slPct: num(g(C.slPct)), sl: num(g(C.sl)),
+      trSl: num(g(C.trSl)), trSlPct: num(g(C.trSlPct)), trTgt: num(g(C.trTgt)), trTgtPct: num(g(C.trTgtPct)),
+      status: st, hitDate: parseDate(g(C.hitDate)), exit: num(g(C.exit)), days: g(C.days),
+      toggle: String(g(C.toggle) || "ON").toUpperCase(), dayH: num(g(C.dayH)), dayL: num(g(C.dayL)),
+      scanDate: parseDate(g(C.scanDate)), score: g(C.score) === null || g(C.score) === "" ? null : num(g(C.score)),
+      pushed: String(g(C.pushed) || "").trim().toUpperCase() === "YES",
+      maxH: num(g(C.maxH)), eTime: g(C.eTime) ? String(g(C.eTime)) : "", xTime: g(C.xTime) ? String(g(C.xTime)) : "",
+      lastSim: g(C.lastSim) ? String(g(C.lastSim)) : "",
+      nextEntry: g(C.nextEntry), nextFrom: parseDate(g(C.nextFrom))
+    });
+  });
+  return out;
+}
+
+/* ---------- derived numbers ---------- */
+const CLOSED = ["TARGET HIT","SL HIT","TRAIL EXIT"];
+const isActive = r => r.status === "IN TRADE";
+const isWait = r => r.status === "WAITING";
+const isClosed = r => CLOSED.indexOf(r.status) >= 0;
+const isDead = r => r.status === "NOT ENTERED" || r.status === "DISQUALIFIED";
+const retPct = r => r.entry > 0 ? ((isClosed(r) ? r.exit : r.live) - r.entry) / r.entry * 100 : 0;
+const runUp = r => (r.entry > 0 && r.maxH > 0) ? (r.maxH - r.entry) / r.entry * 100 : 0;
+
+function visible(){
+  return ROWS.filter(r => (filt === "all" || (filt === "yes" ? r.pushed : !r.pushed)) &&
+                          (!q || r.symbol.toLowerCase().indexOf(q) >= 0 || r.company.toLowerCase().indexOf(q) >= 0));
+}
+
+/* ---------- snapshot ---------- */
+function renderSnap(rows){
+  const act = rows.filter(isActive), wait = rows.filter(isWait), cl = rows.filter(isClosed), dead = rows.filter(isDead);
+  const liveAmt = act.reduce((a, r) => a + retPct(r) / 100 * INVEST, 0);
+  const livePct = act.length ? liveAmt / (act.length * INVEST) * 100 : 0;
+  const realAmt = cl.reduce((a, r) => a + retPct(r) / 100 * INVEST, 0);
+  const col = liveAmt > 0 ? "g" : liveAmt < 0 ? "r" : "";
+  const col2 = realAmt > 0 ? "g" : realAmt < 0 ? "r" : "";
+  $("snap").innerHTML =
+    `<div class="tile"><div class="l">Active</div><div class="v">${act.length}</div></div>
+     <div class="tile"><div class="l">Pending</div><div class="v a">${wait.length}</div></div>
+     <div class="tile"><div class="l">Closed</div><div class="v">${cl.length}</div><div class="s m">+${dead.length} never entered</div></div>
+     <div class="tile wide"><div class="l">Live P&amp;L (₹1L / trade)</div>
+        <div class="v big ${col}">${sgn(liveAmt)}${inr0(liveAmt)} <span class="s">(${pct(livePct)})</span></div></div>
+     <div class="tile wide"><div class="l">Closed P&amp;L (realised)</div>
+        <div class="v big ${col2}">${sgn(realAmt)}${inr0(realAmt)}</div></div>`;
+}
+
+/* ---------- cards ---------- */
+function badge(r){
+  switch (r.status){
+    case "IN TRADE": return '<span class="badge b-act">■ ACTIVE</span>';
+    case "WAITING": return '<span class="badge b-wait">⏳ PENDING</span>';
+    case "TARGET HIT": return '<span class="badge b-tgt">■ TARGET HIT</span>';
+    case "SL HIT": return '<span class="badge b-sl">■ SL HIT</span>';
+    case "TRAIL EXIT": return '<span class="badge b-tr">🛡️ TRAIL EXIT</span>';
+    default: return `<span class="badge b-na">${esc(r.status)}</span>`;
+  }
+}
+function pushBadge(r){ return r.pushed ? '<span class="badge b-yes">IN MAIN</span>' : '<span class="badge b-no">DS ONLY</span>'; }
+function links(r){
+  return `<div class="links">
+    <a href="https://www.screener.in/company/${encodeURIComponent(r.symbol)}/" target="_blank" rel="noopener">DATA</a>
+    <a href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(r.raw)}" target="_blank" rel="noopener">CHART</a>
+    <a href="https://www.google.com/search?q=${encodeURIComponent(r.company + ' stock news')}&tbm=nws" target="_blank" rel="noopener">NEWS</a></div>`;
+}
+function levels(r){
+  const tgt = r.trTgt > r.tgt ? `<span class="vl g">₹${fmt2(r.trTgt)}<br><span style="font-size:.55rem">(TRAILED)</span></span>` : `<span class="vl g">₹${fmt2(r.tgt)}</span>`;
+  const sl = r.trSl > r.sl ? `<span class="vl p">₹${fmt2(r.trSl)}<br><span style="font-size:.55rem">(TRAILED)</span></span>` : `<span class="vl r">₹${fmt2(r.sl)}</span>`;
+  return `<div class="dg"><div class="i"><span class="lb">ENTRY</span><span class="vl">₹${fmt2(r.entry)}</span></div>
+          <div class="i"><span class="lb">TARGET</span>${tgt}</div><div class="i"><span class="lb">STOP LOSS</span>${sl}</div></div>`;
+}
+function meta(r){
+  const sc = r.score === null ? "--" : r.score.toFixed(1);
+  return `<div class="dg"><div class="i"><span class="lb">SCORE</span><span class="vl">${sc}</span></div>
+          <div class="i"><span class="lb">DAY HIGH</span><span class="vl">₹${fmt2(r.dayH)}</span></div>
+          <div class="i"><span class="lb">DAY LOW</span><span class="vl">₹${fmt2(r.dayL)}</span></div></div>`;
+}
+function maxHighBox(r){
+  if (!(r.maxH > 0) || !(r.entry > 0)) return "";
+  return `<div class="mx">MAX HIGH SINCE ENTRY: ₹${fmt2(r.maxH)} <span class="g">(${pct(runUp(r))})</span></div>`;
+}
+
+function cardActive(r){
+  const p = retPct(r), amt = p / 100 * INVEST, chg = r.chg * (Math.abs(r.chg) < 1 ? 100 : 1);
+  return `<div class="card">
+    <div class="row"><div class="sym">${esc(r.symbol)}</div><div>${badge(r)} ${pushBadge(r)}</div></div>
+    <div class="mid"><div><div class="k">TODAY'S CHG</div><div class="n ${cls(chg)}">${pct(chg)}</div></div>
+      <div style="text-align:right"><div class="k">LIVE P&amp;L (₹1L)</div>
+      <div class="n ${cls(amt)}">${sgn(amt)}${inr0(amt)} <span style="font-size:.6rem">(${pct(p)})</span></div></div></div>
+    <details><summary>View Trade Details</summary><div class="det">
+      <div class="co">${esc(r.company)}</div>
+      <div class="dt">ENTRY: ${dstr(r.eDate)} ${esc(r.eTime)} &middot; trail ${esc(r.toggle)} &middot; scanned ${dstr(r.scanDate)}</div>
+      <div class="pxl">Live Price</div><div class="px">₹${fmt2(r.live)}</div>
+      ${levels(r)}${maxHighBox(r)}${meta(r)}${links(r)}</div></details></div>`;
+}
+function cardPending(r){
+  const dist = r.live > 0 && r.entry > 0 ? (r.live - r.entry) / r.entry * 100 : 0;
+  const nxt = r.nextEntry !== null && r.nextEntry !== "" ?
+      (Number(r.nextEntry) === -1 ? `<span class="r">will be DISQUALIFIED from ${dstr(r.nextFrom)}</span>`
+        : `<span class="a">line moves to ₹${fmt2(r.nextEntry)} from ${dstr(r.nextFrom)}</span>`) : "";
+  return `<div class="card" style="border-top-color:var(--amber)">
+    <div class="row"><div class="sym">${esc(r.symbol)}</div><div>${badge(r)} ${pushBadge(r)}</div></div>
+    <div class="mid"><div><div class="k">ENTRY LINE</div><div class="n">₹${fmt2(r.entry)}</div></div>
+      <div style="text-align:right"><div class="k">PRICE vs LINE</div><div class="n ${r.live ? '' : 'm'}">${r.live ? pct(dist) : '--'}</div></div></div>
+    <details><summary>View Details</summary><div class="det">
+      <div class="co">${esc(r.company)}</div>
+      <div class="dt">scanned ${dstr(r.scanDate)} &middot; score ${r.score === null ? '--' : r.score.toFixed(1)}</div>
+      <div class="pxl">Last Price</div><div class="px">${r.live ? '₹' + fmt2(r.live) : '--'}</div>
+      <div class="dg"><div class="i"><span class="lb">ENTRY</span><span class="vl">₹${fmt2(r.entry)}</span></div>
+        <div class="i"><span class="lb">TARGET</span><span class="vl g">₹${fmt2(r.entry * (1 + (r.tgtPct || .15)))}</span></div>
+        <div class="i"><span class="lb">STOP LOSS</span><span class="vl r">₹${fmt2(r.entry * (1 - (r.slPct || .10)))}</span></div></div>
+      ${nxt ? `<div class="mx" style="border-left-color:var(--amber)">${nxt}</div>` : ""}
+      ${links(r)}</div></details></div>`;
+}
+
+/* ---------- history table ---------- */
+const HCOLS = [
+  ["Symbol", r => r.symbol, r => r.symbol],
+  ["Entry date", r => dstr(r.eDate) + " " + r.eTime, r => r.eDate ? r.eDate.getTime() : 0],
+  ["Exit date", r => dstr(r.hitDate) + " " + r.xTime, r => r.hitDate ? r.hitDate.getTime() : 0],
+  ["Entry", r => fmt2(r.entry), r => r.entry],
+  ["Exit", r => fmt2(r.exit), r => r.exit],
+  ["Max high", r => r.maxH ? fmt2(r.maxH) : "--", r => r.maxH],
+  ["Run-up %", r => r.maxH ? pct(runUp(r)) : "--", r => runUp(r)],
+  ["P&L ₹", r => sgn(retPct(r)) + inr0(retPct(r) / 100 * INVEST), r => retPct(r)],
+  ["P&L %", r => pct(retPct(r)), r => retPct(r)],
+  ["Status", r => r.status, r => r.status],
+  ["Score", r => r.score === null ? "--" : r.score.toFixed(1), r => r.score === null ? -1 : r.score],
+  ["Main?", r => r.pushed ? "Yes" : "No", r => r.pushed ? 1 : 0]
+];
+function colorCell(i, r){
+  if (i === 7 || i === 8){ const p = retPct(r); return p > 0 ? "g" : p < 0 ? "r" : ""; }
+  if (i === 9) return r.status === "TARGET HIT" ? "g" : r.status === "SL HIT" ? "r" : "p";
+  if (i === 6) return "g";
+  return "";
+}
+function renderHistory(rows){
+  const cl = rows.filter(isClosed);
+  if (!cl.length) return '<div class="empty">No closed trades yet.</div>';
+  const total = cl.reduce((a, r) => a + retPct(r) / 100 * INVEST, 0);
+  const col = total > 0 ? "g" : total < 0 ? "r" : "";
+  let data = cl.slice();
+  if (sortKey === null) data.sort((a, b) => (b.hitDate ? b.hitDate.getTime() : 0) - (a.hitDate ? a.hitDate.getTime() : 0));
+  else data.sort((a, b) => { const x = HCOLS[sortKey][2](a), y = HCOLS[sortKey][2](b); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  const head = HCOLS.map((c, i) => `<th data-s="${i}">${c[0]}${sortKey === i ? (sortDir > 0 ? " ▲" : " ▼") : ""}</th>`).join("");
+  const body = data.map(r => "<tr>" + HCOLS.map((c, i) => `<td class="${colorCell(i, r)}">${esc(c[1](r))}</td>`).join("") + "</tr>").join("");
+  return `<div class="hh">Closed trade cumulative P&amp;L (₹1L per trade, ${cl.length} trades)</div>
+    <div class="hbig ${col}" style="margin-bottom:12px">${sgn(total)}${inr0(total)}</div>
+    <div class="twrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+/* ---------- analysis ---------- */
+function stats(list){
+  const cl = list.filter(isClosed), op = list.filter(isActive);
+  const rets = cl.map(retPct), wins = rets.filter(x => x > 0), loss = rets.filter(x => x <= 0);
+  const sum = a => a.reduce((x, y) => x + y, 0), avg = a => a.length ? sum(a) / a.length : 0;
+  const gp = sum(wins), gl = Math.abs(sum(loss));
+  return {n: list.length, closed: cl.length, open: op.length, win: cl.length ? wins.length / cl.length * 100 : 0,
+    avg: avg(rets), avgW: avg(wins), avgL: avg(loss), tot: sum(rets) / 100 * INVEST,
+    pf: gl > 0 ? gp / gl : (gp > 0 ? Infinity : 0), run: avg(cl.map(runUp)), openAvg: avg(op.map(retPct)),
+    dead: list.filter(isDead).length};
+}
+function statRow(label, s){
+  const pf = s.pf === Infinity ? "∞" : s.pf.toFixed(2);
+  return `<tr><td>${label}</td><td>${s.n}</td><td>${s.closed}</td><td>${s.open}</td><td class="${s.win >= 50 ? 'g' : s.closed ? 'r' : ''}">${s.closed ? s.win.toFixed(0) + '%' : '--'}</td>
+    <td class="${cls(s.avg)}">${s.closed ? pct(s.avg) : '--'}</td><td class="g">${s.closed ? pct(s.avgW) : '--'}</td><td class="r">${s.closed ? pct(s.avgL) : '--'}</td>
+    <td>${s.closed ? pf : '--'}</td><td class="g">${s.closed ? pct(s.run) : '--'}</td><td class="${cls(s.tot)}">${s.closed ? sgn(s.tot) + inr0(s.tot) : '--'}</td>
+    <td class="${cls(s.openAvg)}">${s.open ? pct(s.openAvg) : '--'}</td><td class="m">${s.dead}</td></tr>`;
+}
+function statTable(title, groups){
+  const head = ["Group","Picks","Closed","Open","Win %","Avg %","Avg win","Avg loss","Profit factor","Avg run-up","Total ₹","Open avg %","Never entered"]
+    .map(h => `<th>${h}</th>`).join("");
+  return `<h3>${title}</h3><div class="twrap"><table><thead><tr>${head}</tr></thead><tbody>
+    ${groups.map(g => statRow(g[0], stats(g[1]))).join("")}</tbody></table></div>`;
+}
+function renderAnalysis(rows){
+  if (!rows.length) return '<div class="empty">No data.</div>';
+  const withScore = rows.filter(r => r.score !== null);
+  const b = (lo, hi) => withScore.filter(r => r.score >= lo && r.score < hi);
+  const ex = (st) => rows.filter(r => r.status === st);
+  return statTable("All picks vs. what you pushed to Main", [
+      ["All DS picks", rows], ["Pushed to Main", rows.filter(r => r.pushed)], ["Not pushed (DS only)", rows.filter(r => !r.pushed)]]) +
+    statTable("By scan score", [["Score 70+", b(70, 1000)], ["Score 50 – 70", b(50, 70)], ["Score below 50", b(-1, 50)]]) +
+    statTable("By exit type", [["TARGET HIT", ex("TARGET HIT")], ["TRAIL EXIT", ex("TRAIL EXIT")], ["SL HIT", ex("SL HIT")],
+      ["Still active", ex("IN TRADE")], ["Waiting", ex("WAITING")], ["Not entered", ex("NOT ENTERED")], ["Disqualified", ex("DISQUALIFIED")]]) +
+    `<div class="note">Closed = TARGET HIT / TRAIL EXIT / SL HIT. P&amp;L assumes ₹1L per trade. "Avg run-up" = how far the best price after entry was above entry on average (closed trades).
+     "Never entered" = picks that never filled or were disqualified when the trend turned red. Results replayed from 1-minute candles; if SL and target fall in the same minute, SL is assumed first.</div>`;
+}
+
+/* ---------- main render ---------- */
+/* ---------- pending list (table) ---------- */
+let pKey = 2, pDir = -1;
+function nextNote(r){
+  if (r.nextEntry === null || r.nextEntry === "") return "";
+  return Number(r.nextEntry) === -1 ? "Will be DISQUALIFIED from " + dstr(r.nextFrom)
+       : "Line → ₹" + fmt2(r.nextEntry) + " from " + dstr(r.nextFrom);
+}
+const distTo = r => (r.live > 0 && r.entry > 0) ? (r.live - r.entry) / r.entry * 100 : null;
+const PCOLS = [
+  ["Symbol", r => r.symbol, r => r.symbol],
+  ["Scan date", r => dstr(r.scanDate), r => r.scanDate ? r.scanDate.getTime() : 0],
+  ["Score", r => r.score === null ? "--" : r.score.toFixed(1), r => r.score === null ? -1 : r.score],
+  ["Entry line", r => "₹" + fmt2(r.entry), r => r.entry],
+  ["Last price", r => r.live ? "₹" + fmt2(r.live) : "--", r => r.live],
+  ["Above line %", r => distTo(r) === null ? "--" : pct(distTo(r)), r => distTo(r) === null ? 1e9 : distTo(r)],
+  ["Target", r => "₹" + fmt2(r.entry * (1 + (r.tgtPct || .15))), r => r.entry],
+  ["Stop loss", r => "₹" + fmt2(r.entry * (1 - (r.slPct || .10))), r => r.entry],
+  ["Next change", nextNote, r => nextNote(r)],
+  ["Main?", r => r.pushed ? "Yes" : "No", r => r.pushed ? 1 : 0]
+];
+function renderPending(rows){
+  const w = rows.filter(isWait);
+  if (!w.length) return '<div class="empty">Nothing pending.</div>';
+  w.sort((a, b) => { const x = PCOLS[pKey][2](a), y = PCOLS[pKey][2](b); return (x > y ? 1 : x < y ? -1 : 0) * pDir; });
+  const head = PCOLS.map((c, i) => `<th data-p="${i}">${c[0]}${pKey === i ? (pDir > 0 ? " ▲" : " ▼") : ""}</th>`).join("");
+  const body = w.map(r => "<tr>" + PCOLS.map((c, i) => {
+    let k = "";
+    if (i === 5) { const d = distTo(r); k = d === null ? "m" : ""; }
+    if (i === 6) k = "g"; if (i === 7) k = "r"; if (i === 8) k = Number(r.nextEntry) === -1 ? "r" : "a";
+    if (i === 9) k = r.pushed ? "g" : "m";
+    return `<td class="${k}">${esc(c[1](r))}</td>`;
+  }).join("") + "</tr>").join("");
+  return `<div class="hh">${w.length} pending (waiting for price to fall to the entry line)</div>
+    <div class="twrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function render(){
+  const rows = visible();
+  renderSnap(rows);
+  const v = $("view");
+  if (tab === "active"){
+    const a = rows.filter(isActive);
+    v.innerHTML = a.length ? '<div class="grid">' + a.map(cardActive).join("") + "</div>" : '<div class="empty">System idle. No active trades.</div>';
+  } else if (tab === "pending"){
+    v.innerHTML = renderPending(rows);
+    v.querySelectorAll("th[data-p]").forEach(th => th.onclick = () => {
+      const k = +th.dataset.p; if (pKey === k) pDir *= -1; else { pKey = k; pDir = -1; } render();
+    });
+  } else if (tab === "history"){
+    v.innerHTML = renderHistory(rows);
+    v.querySelectorAll("th[data-s]").forEach(th => th.onclick = () => {
+      const k = +th.dataset.s; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; } render();
+    });
+  } else v.innerHTML = renderAnalysis(rows);
+}
+
+/* ---------- data loading (JSONP via Google's gviz endpoint: no CORS problems) ---------- */
+let loadTimer = null;
+window.__dsCb = function(resp){
+  clearTimeout(loadTimer);
+  if (!resp || resp.status === "error"){
+    const m = resp && resp.errors && resp.errors[0] ? (resp.errors[0].detailed_message || resp.errors[0].message) : "unknown error";
+    showErr("Google returned an error: " + esc(m) + ". Check the tab is named <b>" + SHEET_NAME + "</b> and the sheet is shared as <b>Anyone with the link → Viewer</b>.");
+    return;
+  }
+  $("err").style.display = "none";
+  ROWS = toRows(resp.table);
+  const sims = ROWS.map(r => r.lastSim).filter(Boolean).sort();
+  $("lastSim").textContent = sims.length ? sims[sims.length - 1] : "no replay yet";
+  $("lastFetch").textContent = new Date().toLocaleTimeString("en-IN");
+  render();
+};
+function showErr(html){ const e = $("err"); e.innerHTML = html; e.style.display = "block"; }
+function load(){
+  const old = document.getElementById("gv"); if (old) old.remove();
+  const s = document.createElement("script");
+  s.id = "gv";
+  s.src = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=" + encodeURIComponent(SHEET_NAME) +
+          "&headers=1&tqx=" + encodeURIComponent("out:json;responseHandler:__dsCb") + "&_=" + Date.now();
+  s.onerror = () => showErr("Could not reach Google Sheets. Check your internet connection.");
+  document.body.appendChild(s);
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => { if (!ROWS.length) showErr("No response from Google Sheets yet. If this stays, make sure the sheet is shared as <b>Anyone with the link → Viewer</b> and you are online."); }, 15000);
+}
+
+$("tabs").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+  tab = b.dataset.t; [...$("tabs").children].forEach(x => x.classList.toggle("on", x === b)); render(); };
+$("segFilter").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+  filt = b.dataset.f; [...$("segFilter").children].forEach(x => x.classList.toggle("on", x === b)); render(); };
+$("search").oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
+$("refreshBtn").onclick = load;
+
+/* ---------- theme: Auto (follows Windows/phone setting) -> Dark -> Light ---------- */
+const THEMES = ["auto", "dark", "light"];
+function applyTheme(t){
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  $("themeBtn").textContent = "Theme: " + t.charAt(0).toUpperCase() + t.slice(1);
+}
+let theme = "auto";
+try { const sv = localStorage.getItem("ds_theme"); if (THEMES.indexOf(sv) >= 0) theme = sv; } catch (e) {}
+applyTheme(theme);
+$("themeBtn").onclick = () => {
+  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  applyTheme(theme);
+  try { localStorage.setItem("ds_theme", theme); } catch (e) {}
+};
+load();
+setInterval(load, REFRESH_MS);
+</script>
+</body>
+</html>
